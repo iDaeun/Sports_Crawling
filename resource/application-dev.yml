@@ -1,0 +1,8 @@
+URL:
+  WEATHER: https://weather.naver.com/json/crntWetr.nhn 
+
+DB:
+  HOST: localhost
+  USER: root
+  PW: admin
+  DB: CRAWLING_DEV
