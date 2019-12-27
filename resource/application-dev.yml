@@ -1,5 +1,5 @@
 URL:
-  WEATHER: https://weather.naver.com/json/crntWetr.nhn 
+  SPORTS: https://sports.news.naver.com/scoreboard/index.nhn?date=
 
 DB:
   HOST: localhost
