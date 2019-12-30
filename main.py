@@ -25,8 +25,8 @@ def DBInsert(conn, curs, order, time, name, result):
     print()
     # sql = 'INSERT INTO SPORTS (G_ORDER, C_TIME, G_TIME, G_NAME, G_RESULT) VALUES(%s, now(), %s, %s, %s) ON DUPLICATE KEY UPDATE G_ORDER = %s, G_TIME = %s, G_NAME = %s, G_RESULT = %s'
     # data = (order, time, name, result, order, time, name, result)
-    sql = 'INSERT INTO SPORTS (G_ORDER, C_TIME, G_TIME, G_NAME, G_RESULT) VALUES(%s, now(), %s, %s, %s)'
-    data = (order, time, name, result)
+    sql = 'INSERT INTO SPORTS (C_TIME, G_TIME, G_NAME, G_RESULT) VALUES(now(), %s, %s, %s)'
+    data = (time, name, result)
     curs.execute(sql, data)
     conn.commit()
     print("** 데이터 입력 **")
