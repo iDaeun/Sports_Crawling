@@ -36,6 +36,8 @@ def open(url):
 def main():
     try:
 
+        print(" == start == ")
+
         frame = TargetConfig.SPORTS
 
         # 오늘 경기
@@ -44,11 +46,27 @@ def main():
         soup = open(NowUrl)
 
         # 어제 경기
-        yest = (datetime.today() + timedelta(days=-1)).strftime("%Y%m%d")
-        yestUrl = frame + yest
+        # yest = (datetime.today() + timedelta(days=-1)).strftime("%Y%m%d")
+        # yestUrl = frame + yest
 
-        
-
+        # 오늘 경기 : 현재 시간 이전으로 경기 검색
+        time = datetime.today().strftime("%H")
+        print("현재시간 >>> " + time)
+        # <tr class="ing">, <td class="state">최종결과 입력 전 입니다</td> --> 제외
+        scoreboard = soup.find("table", class_="tbl_scoreboard_day")
+        for boardTime in soup.find_all("td", class_="time"):
+            if time >= boardTime.get_text()[0:2]:
+                print(boardTime.get_text()[0:2] + " ============ ")
+                table = boardTime.find_next().find("table")
+                trs = table.find_all("tr")
+                for tr in trs[1:]:
+                    print(tr["class"])
+                    if not 'ing' in tr["class"]:
+                        for state in tr.find_all("td", class_="state"):
+                            score = state.get_text().replace('\n', " ").replace('\t', " ").replace("  ", "")
+                            if not score.strip() == "최종결과 입력 전 입니다.":
+                                print(score)
+                        
     except:
         print("error2")
 
