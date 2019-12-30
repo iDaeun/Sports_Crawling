@@ -18,7 +18,13 @@ import html5lib
 # - 경기결과 15개 노출  
 # : 노출 순서는 최근 시작한 경기부터 오래전에 시작한 경기 순으로 노출함.
 # : 15개 경기 선정 기준은     
-# 1. 경기시간 > 2. 대회 우선순위(TBD) > 3. 좌측팀 가나다순 
+# 1. 경기시간 > 2. 대회 우선순위(TBD) > 3. 좌측팀 가나다순
+
+def getScore(state):
+    score = state.get_text().replace('\n', " ").replace('\t', " ").replace("  ", "")
+    if not score.strip() == "최종결과 입력 전 입니다." and 'vs' not in score.strip():
+        print(score)
+        return score
 
 def open(url):
     try:
@@ -69,21 +75,17 @@ def main(logger):
                     tr = thisClass.find_all("tr")[1] 
                     if not 'ing' in tr["class"]:
                         for state in tr.find_all("td", class_="state"):
-                            score = state.get_text().replace('\n', " ").replace('\t', " ").replace("  ", "")
-                            if not score.strip() == "최종결과 입력 전 입니다." and 'vs' not in score.strip():
-                                print(score)
+                            score0 = getScore(state)
                     
-                                for o in tr.find_all_next("tr"):
-                                    if o.get("class") == None:
-                                        break
-                                    elif not 'start' in o.get("class"):
-                                        for state1 in o.find_all("td", class_="state"):
-                                            score1 = state1.get_text().replace('\n', " ").replace('\t', " ").replace("  ", "")
-                                            if not score1.strip() == "최종결과 입력 전 입니다." and 'vs' not in score1.strip():
-                                                print(score1)
-                                    elif 'start' in o.get("class"):
-                                        break
-                                    print("=====================================================")
+                            for o in tr.find_all_next("tr"):
+                                if o.get("class") == None:
+                                    break
+                                elif not 'start' in o.get("class"):
+                                    for state1 in o.find_all("td", class_="state"):
+                                        score1 = getScore(state1)
+                                elif 'start' in o.get("class"):
+                                    break
+                                print("=====================================================")
 
 
 
