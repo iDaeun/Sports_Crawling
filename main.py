@@ -20,10 +20,56 @@ import html5lib
 # : 15개 경기 선정 기준은     
 # 1. 경기시간 > 2. 대회 우선순위(TBD) > 3. 좌측팀 가나다순
 
+def DBInsert(order, time, name, result):
+    print(order, time, name, result)
+    print()
+    # sql = 'INSERT INTO SPORTS (G_ORDER, C_TIME, G_TIME, G_NAME, G_RESULT) VALUES(%s, now(), %s, %s, %s) ON DUPLICATE KEY UPDATE G_ORDER = %s, G_TIME = %s, G_NAME = %s, G_RESULT = %s'
+    # data = (order, time, name, result, order, time, name, result)
+    # curs.execute(sql, data)
+    # conn.commit()
+    # print("** 데이터 입력 **")
+
+def findGame(soup, needed, gameDate, conn, curs, count):
+    #print(gameDate)
+
+    scoreboard = soup.find("table", class_="tbl_scoreboard_day")
+
+    for gameName in soup.find_all("td", class_="game"):
+        for i in range(0, len(needed)):
+            if needed[i] == gameName.get_text():
+                #print("@@@ " + needed[i])
+                # 본인 tr + 본 게임에 해당되는 다른 tr들 가져오기
+                #print(gameName.get_text())
+                #print(gameName.find_previous("tr"))
+                thisClass = gameName.find_previous("tr")
+                tr = thisClass.find_all("tr")[1] 
+                if not 'ing' in tr["class"]:
+                    for state in tr.find_all("td", class_="state"):
+                        score0 = getScore(state)
+                        if score0 is not None:
+                            count +=1
+                            DBInsert(count, gameDate, needed[i], score0)
+                
+                        for o in tr.find_all_next("tr"):
+                            if o.get("class") == None:
+                                continue
+                            elif 'start' in o.get("class"):
+                                break
+                            else:
+                                if 'state' in o.find_next("td").get("class"):
+                                    for state1 in o.find_all("td", class_="state"):
+                                        score1 = getScore(state1)
+                                        if score1 is not None:
+                                            count +=1
+                                            DBInsert(count, gameDate, needed[i], score1)
+                print("=====================================================")
+    
+    return count
+
 def getScore(state):
     score = state.get_text().replace('\n', " ").replace('\t', " ").replace("  ", "")
     if not score.strip() == "최종결과 입력 전 입니다." and 'vs' not in score.strip():
-        print(score)
+        #print(score)
         return score
 
 def open(url):
@@ -42,67 +88,37 @@ def open(url):
 def main(logger):
     try:
 
+        count = 0
+
+        # DB
+        # conn = pymysql.connect(host=TargetConfig.DB_HOST, user=TargetConfig.DB_USER, password=TargetConfig.DB_PW, db=TargetConfig.DB_NAME, charset='utf8')
+        # curs = conn.cursor()
+        conn = ""
+        curs = ""
+
         print(" == start == ")
 
         frame = TargetConfig.SPORTS
 
-        # 오늘 경기
-        now = datetime.today().strftime("%Y%m%d")
-        NowUrl = frame + now
-        soup = open(NowUrl)
-
-        # 어제 경기
-        # yest = (datetime.today() + timedelta(days=-1)).strftime("%Y%m%d")
-        # yestUrl = frame + yest
-
-        # 오늘 경기 : 현재 시간 이전으로 경기 검색
-        time = datetime.today().strftime("%H")
-        print("현재시간 >>> " + time + "시")
-
         # 대회 우선 순위 : MLB, 프리미어리그, 라리가, 리그앙, 프리미어12, K리그1, 남자프로배구, 여자프로배구, 프로농구, 여자프로농구
         needed = ['MLB', '프리미어리그', '라리가', '리그앙', '프리미어12', 'K리그1', '남자프로배구', '여자프로배구', '프로농구', '여자프로농구']
 
-        scoreboard = soup.find("table", class_="tbl_scoreboard_day")
+        # 오늘 경기
+        today = datetime.today().strftime("%Y%m%d")
+        todUrl = frame + today
+        soup = open(todUrl)
 
-        for gameName in soup.find_all("td", class_="game"):
-            for i in range(0, len(needed)):
-                if needed[i] == gameName.get_text():
-                    print("@@@ " + needed[i])
-                    # 본인 tr + 본 게임에 해당되는 다른 tr들 가져오기
-                    #print(gameName.get_text())
-                    #print(gameName.find_previous("tr"))
-                    thisClass = gameName.find_previous("tr")
-                    tr = thisClass.find_all("tr")[1] 
-                    if not 'ing' in tr["class"]:
-                        for state in tr.find_all("td", class_="state"):
-                            score0 = getScore(state)
-                    
-                            for o in tr.find_all_next("tr"):
-                                if o.get("class") == None:
-                                    break
-                                elif not 'start' in o.get("class"):
-                                    for state1 in o.find_all("td", class_="state"):
-                                        score1 = getScore(state1)
-                                elif 'start' in o.get("class"):
-                                    break
-                                print("=====================================================")
+        gameDate = datetime.today().strftime("%m.%d")
+        count = findGame(soup, needed, gameDate, conn, curs, count)
 
+        # 어제 경기
+        yest = (datetime.today() + timedelta(days=-1)).strftime("%Y%m%d")
+        yestUrl = frame + yest
+        soup1 = open(yestUrl)
 
+        gameDate = (datetime.today() + timedelta(days=-1)).strftime("%m.%d")
 
-
-        # <tr class="ing">, <td class="state">최종결과 입력 전 입니다</td> --> 제외
-        # for boardTime in soup.find_all("td", class_="time"):
-        #     if time >= boardTime.get_text()[0:2]:
-        #         print(boardTime.get_text()[0:2] + " ============ ")
-        #         table = boardTime.find_next().find("table")
-        #         trs = table.find_all("tr")
-        #         for tr in trs[1:]:
-        #             print(tr["class"])
-        #             if not 'ing' in tr["class"]:
-        #                 for state in tr.find_all("td", class_="state"):
-        #                     score = state.get_text().replace('\n', " ").replace('\t', " ").replace("  ", "")
-        #                     if not score.strip() == "최종결과 입력 전 입니다.":
-        #                         print(score)
+        findGame(soup1, needed, gameDate, conn, curs, count)
                         
     except Exception as ex:
         logger.error("error2 " + str(ex))
