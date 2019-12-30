@@ -33,7 +33,7 @@ def open(url):
     
     return BeautifulSoup(source, "html5lib")
 
-def main():
+def main(logger):
     try:
 
         print(" == start == ")
@@ -51,29 +51,68 @@ def main():
 
         # 오늘 경기 : 현재 시간 이전으로 경기 검색
         time = datetime.today().strftime("%H")
-        print("현재시간 >>> " + time)
-        # <tr class="ing">, <td class="state">최종결과 입력 전 입니다</td> --> 제외
+        print("현재시간 >>> " + time + "시")
+
+        # 대회 우선 순위 : MLB, 프리미어리그, 라리가, 리그앙, 프리미어12, K리그1, 남자프로배구, 여자프로배구, 프로농구, 여자프로농구
+        needed = ['MLB', '프리미어리그', '라리가', '리그앙', '프리미어12', 'K리그1', '남자프로배구', '여자프로배구', '프로농구', '여자프로농구']
+
         scoreboard = soup.find("table", class_="tbl_scoreboard_day")
-        for boardTime in soup.find_all("td", class_="time"):
-            if time >= boardTime.get_text()[0:2]:
-                print(boardTime.get_text()[0:2] + " ============ ")
-                table = boardTime.find_next().find("table")
-                trs = table.find_all("tr")
-                for tr in trs[1:]:
-                    print(tr["class"])
+
+        for gameName in soup.find_all("td", class_="game"):
+            for i in range(0, len(needed)):
+                if needed[i] == gameName.get_text():
+                    print("@@@ " + needed[i])
+                    # 본인 tr + 본 게임에 해당되는 다른 tr들 가져오기
+                    #print(gameName.get_text())
+                    #print(gameName.find_previous("tr"))
+                    thisClass = gameName.find_previous("tr")
+                    tr = thisClass.find_all("tr")[1] 
                     if not 'ing' in tr["class"]:
                         for state in tr.find_all("td", class_="state"):
                             score = state.get_text().replace('\n', " ").replace('\t', " ").replace("  ", "")
-                            if not score.strip() == "최종결과 입력 전 입니다.":
+                            if not score.strip() == "최종결과 입력 전 입니다." and 'vs' not in score.strip():
                                 print(score)
+                    
+                                for o in tr.find_all_next("tr"):
+                                    if o.get("class") == None:
+                                        break
+                                    elif not 'start' in o.get("class"):
+                                        for state1 in o.find_all("td", class_="state"):
+                                            score1 = state1.get_text().replace('\n', " ").replace('\t', " ").replace("  ", "")
+                                            if not score1.strip() == "최종결과 입력 전 입니다." and 'vs' not in score1.strip():
+                                                print(score1)
+                                    elif 'start' in o.get("class"):
+                                        break
+                                    print("=====================================================")
+
+
+
+
+        # <tr class="ing">, <td class="state">최종결과 입력 전 입니다</td> --> 제외
+        # for boardTime in soup.find_all("td", class_="time"):
+        #     if time >= boardTime.get_text()[0:2]:
+        #         print(boardTime.get_text()[0:2] + " ============ ")
+        #         table = boardTime.find_next().find("table")
+        #         trs = table.find_all("tr")
+        #         for tr in trs[1:]:
+        #             print(tr["class"])
+        #             if not 'ing' in tr["class"]:
+        #                 for state in tr.find_all("td", class_="state"):
+        #                     score = state.get_text().replace('\n', " ").replace('\t', " ").replace("  ", "")
+        #                     if not score.strip() == "최종결과 입력 전 입니다.":
+        #                         print(score)
                         
-    except:
+    except Exception as ex:
+        logger.error("error2 " + str(ex))
         print("error2")
 
 
 if __name__ == "__main__":
 
+    logging.basicConfig(format='[%(lineno)d]%(asctime)s||%(message)s')
+    logger = logging.getLogger(name="myLogger")
+
     try:
-         main()
+         main(logger)
     except:
         print("error1")
