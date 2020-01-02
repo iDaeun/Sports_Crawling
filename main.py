@@ -22,7 +22,7 @@ import html5lib
 
 def DBInsert(conn, curs, order, time, name, result):
     print(order, time, name, result)
-    sql = 'INSERT INTO SPORTS (G_ORDER, C_TIME, G_TIME, G_NAME, G_RESULT) VALUES(%s, now(), %s, %s, %s) ON DUPLICATE KEY UPDATE G_TIME = %s, G_NAME = %s, G_RESULT = %s'
+    sql = 'INSERT INTO SPORTS (GAME_ORDER, GAME_CREATED_DT, GAME_TIME, GAME_NAME, GAME_RESULT) VALUES(%s, now(), %s, %s, %s) ON DUPLICATE KEY UPDATE GAME_TIME = %s, GAME_NAME = %s, GAME_RESULT = %s'
     data = (order, time, name, result, time, name, result)
     curs.execute(sql, data)
     conn.commit()
