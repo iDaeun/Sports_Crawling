@@ -79,41 +79,50 @@ def open(url):
     
     return BeautifulSoup(source, "html5lib")
 
-def main(logger):
-    try:
+# python3 main.py --tg SPORTS_CRAWLING
 
-        count = 0
+def main(args, logger):
 
-        # DB
-        conn = pymysql.connect(host=TargetConfig.DB_HOST, user=TargetConfig.DB_USER, password=TargetConfig.DB_PW, db=TargetConfig.DB_NAME, charset='utf8')
-        curs = conn.cursor()
-        print("== start == ")
+    for target in args.tg:
+        if target == 'SPORTS_CRAWLING':
+            try:
+                loop = True
+                while loop == True:
 
-        frame = TargetConfig.SPORTS
+                    count = 0
 
-        # 대회 우선 순위 : MLB, 프리미어리그, 라리가, 리그앙, 프리미어12, K리그1, 남자프로배구, 여자프로배구, 프로농구, 여자프로농구
-        needed = ['MLB', '프리미어리그', '라리가', '리그앙', '프리미어12', 'K리그1', '남자프로배구', '여자프로배구', '프로농구', '여자프로농구']
+                    # DB
+                    conn = pymysql.connect(host=TargetConfig.DB_HOST, user=TargetConfig.DB_USER, password=TargetConfig.DB_PW, db=TargetConfig.DB_NAME, charset='utf8')
+                    curs = conn.cursor()
+                    print("== start == ")
 
-        # 오늘 경기
-        today = datetime.today().strftime("%Y%m%d")
-        todUrl = frame + today
-        soup = open(todUrl)
+                    frame = TargetConfig.SPORTS
 
-        gameDate = datetime.today().strftime("%m.%d")
-        count = findGame(soup, needed, gameDate, conn, curs, count)
+                    # 대회 우선 순위 : MLB, 프리미어리그, 라리가, 리그앙, 프리미어12, K리그1, 남자프로배구, 여자프로배구, 프로농구, 여자프로농구
+                    needed = ['MLB', '프리미어리그', '라리가', '리그앙', '프리미어12', 'K리그1', '남자프로배구', '여자프로배구', '프로농구', '여자프로농구']
 
-        # 어제 경기
-        yest = (datetime.today() + timedelta(days=-1)).strftime("%Y%m%d")
-        yestUrl = frame + yest
-        soup1 = open(yestUrl)
+                    # 오늘 경기
+                    today = datetime.today().strftime("%Y%m%d")
+                    todUrl = frame + today
+                    soup = open(todUrl)
 
-        gameDate = (datetime.today() + timedelta(days=-1)).strftime("%m.%d")
+                    gameDate = datetime.today().strftime("%m.%d")
+                    count = findGame(soup, needed, gameDate, conn, curs, count)
 
-        findGame(soup1, needed, gameDate, conn, curs, count)
-                        
-    except Exception as ex:
-        logger.error("error2 " + str(ex))
-        print("error2")
+                    # 어제 경기
+                    yest = (datetime.today() + timedelta(days=-1)).strftime("%Y%m%d")
+                    yestUrl = frame + yest
+                    soup1 = open(yestUrl)
+
+                    gameDate = (datetime.today() + timedelta(days=-1)).strftime("%m.%d")
+
+                    findGame(soup1, needed, gameDate, conn, curs, count)
+
+                    print("== SLEEP!! ==")
+                    sleep(10)
+                                    
+            except Exception as ex:
+                logger.error("error2 " + str(ex))
 
 
 if __name__ == "__main__":
@@ -121,7 +130,12 @@ if __name__ == "__main__":
     logging.basicConfig(format='[%(lineno)d]%(asctime)s||%(message)s')
     logger = logging.getLogger(name="myLogger")
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--tg', nargs='+', help='start crawling')
+    args = parser.parse_args()
+
     try:
-         main(logger)
+        main(args, logger)
     except:
-        print("error1")
+        logger.error("error1")
+        raise
