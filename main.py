@@ -22,14 +22,11 @@ import html5lib
 
 def DBInsert(conn, curs, order, time, name, result):
     print(order, time, name, result)
-    print()
-    # sql = 'INSERT INTO SPORTS (G_ORDER, C_TIME, G_TIME, G_NAME, G_RESULT) VALUES(%s, now(), %s, %s, %s) ON DUPLICATE KEY UPDATE G_ORDER = %s, G_TIME = %s, G_NAME = %s, G_RESULT = %s'
-    # data = (order, time, name, result, order, time, name, result)
-    sql = 'INSERT INTO SPORTS (C_TIME, G_TIME, G_NAME, G_RESULT) VALUES(now(), %s, %s, %s)'
-    data = (time, name, result)
+    sql = 'INSERT INTO SPORTS (G_ORDER, C_TIME, G_TIME, G_NAME, G_RESULT) VALUES(%s, now(), %s, %s, %s) ON DUPLICATE KEY UPDATE G_TIME = %s, G_NAME = %s, G_RESULT = %s'
+    data = (order, time, name, result, time, name, result)
     curs.execute(sql, data)
     conn.commit()
-    print("** 데이터 입력 **")
+    print("** 데이터 입력 **\n")
 
 def findGame(soup, needed, gameDate, conn, curs, count):
     scoreboard = soup.find("table", class_="tbl_scoreboard_day")
@@ -59,7 +56,7 @@ def findGame(soup, needed, gameDate, conn, curs, count):
                                         if score1 is not None:
                                             count +=1
                                             DBInsert(conn, curs, count, gameDate, needed[i], score1)
-                print("=====================================================")
+                print("----------------------------------")
     
     return count
 
@@ -90,7 +87,7 @@ def main(logger):
         # DB
         conn = pymysql.connect(host=TargetConfig.DB_HOST, user=TargetConfig.DB_USER, password=TargetConfig.DB_PW, db=TargetConfig.DB_NAME, charset='utf8')
         curs = conn.cursor()
-        print(" == start == ")
+        print("== start == ")
 
         frame = TargetConfig.SPORTS
 
