@@ -1,7 +1,7 @@
 beautifulsoup4==4.8.2
 html5lib==1.0.1
 PyMySQL==0.9.3
-PyYAML==5.2
+PyYAML==5.4
 six==1.13.0
 soupsieve==1.9.5
 webencodings==0.5.1
